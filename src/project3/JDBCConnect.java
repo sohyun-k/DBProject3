@@ -116,5 +116,36 @@ public class JDBCConnect {
 		
 	}
 
+	public ArrayList<ArrayList<String>> getTableResultSet(String query) {
+		ResultSetMetaData metaData = null;
+		ArrayList<ArrayList<String>> tableResultData = new ArrayList<ArrayList<String>>();
+		
+		try {
+			ResultSet rs = st.executeQuery(query);
+			metaData = rs.getMetaData();
+			int sizeOfColumn = metaData.getColumnCount();
+			
+			ArrayList<String> colNameArr = new ArrayList<String>();
+			for(int colIdx =0; colIdx < sizeOfColumn; ++colIdx) {
+				// TODO : 왜 colIdx+1인가?
+				String colName = metaData.getColumnName(colIdx+1);
+				colNameArr.add(colName);
+			}
+			tableResultData.add(colNameArr);
+			
+			while(rs.next()) {
+				ArrayList<String> tempData = new ArrayList<String>();
+				for(int colIdx =0; colIdx < sizeOfColumn; ++colIdx) {
+					tempData.add(rs.getString(colNameArr.get(colIdx).toString()));
+				}
+				tableResultData.add(tempData);
+			}
+			
+		} catch (SQLException e) {
+			return null;
+		}
+		return tableResultData;
+	}
+
 }
 

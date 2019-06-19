@@ -15,12 +15,12 @@ public class ReadCSV {
 	private boolean hasError = true;
 	
 	private String tableName = "";
-	private ArrayList rawCSVData = new ArrayList<String>();
-	private ArrayList colName = new ArrayList<String>();
-	private ArrayList csvColName = new ArrayList<String>();
-	private ArrayList colType = new ArrayList<String>();
-	private ArrayList pkName = new ArrayList<String>();
-	private ArrayList notNull = new ArrayList<String>();
+	private ArrayList<String> rawCSVData = new ArrayList<String>();
+	private ArrayList<String> colName = new ArrayList<String>();
+	private ArrayList<String> csvColName = new ArrayList<String>();
+	private ArrayList<String> colType = new ArrayList<String>();
+	private ArrayList<String> pkName = new ArrayList<String>();
+	private ArrayList<String> notNull = new ArrayList<String>();
 	private ArrayList<ArrayList<String>> csvData = new ArrayList<ArrayList<String>>();
 	private ArrayList<String> insertDataQ = new ArrayList<String>();
 	private int csvColNum = 0;
@@ -115,7 +115,7 @@ public class ReadCSV {
 	}
 	
 	public String getMakeTableQuery() {
-		System.out.println("Please specify the filename for table description : ");
+		System.out.print("Please specify the filename for table description : ");
 		Scanner scan = new Scanner(System.in);
 		txtPath = scan.nextLine();
 		parsingTXT();
@@ -139,17 +139,18 @@ public class ReadCSV {
 		}
 		str += "))";
 		makeTableQ = str;
-		
+		scan.close();
 		return makeTableQ;
 	}
 	
 	public ArrayList<String> getInsertDataQuery(){
-		System.out.println("Please specify the CSV filename : ");
+		System.out.print("Please specify the CSV filename : ");
 		Scanner scan = new Scanner(System.in);
 		csvPath = scan.nextLine();
 		parsingCSV();
 		if(csvColNum!=colName.size()) {
 			System.out.println("Data import failure. (The number of columns does not match between the table description and the CSV file.)");
+			scan.close();
 			return null;
 		}
 		
@@ -172,7 +173,7 @@ public class ReadCSV {
 			String temp = insertSQL + addStr;
 			insertDataQ.add(temp);
 		}	
-	
+		scan.close();
 		return insertDataQ;
 	}
 	
