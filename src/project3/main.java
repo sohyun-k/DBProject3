@@ -26,7 +26,11 @@ public class main {
 				if(tableDataQ!=null)
 				{
 					//execute insert table data
+					con.executeInsertTableDB(tableDataQ, rCSV.getCSVRaw());
 				}
+			}
+			if(mode == 2) {
+				
 			}
 			
 		}

@@ -2,6 +2,7 @@ package project3;
 
 import java.io.*;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Properties;
 
 public class JDBCConnect {
@@ -94,6 +95,25 @@ public class JDBCConnect {
 		} catch (SQLException e) {
 			System.out.println("Table already exists");
 		} 
+	}
+	
+	public void executeInsertTableDB(ArrayList<String> insertTableQ, ArrayList<String> rawCSV) {
+		int fail = 0;
+		ArrayList<String> failedStack = new ArrayList<String>();
+		for(int idx=0; idx<insertTableQ.size(); ++idx) {
+			try {
+				st.executeUpdate(insertTableQ.get(idx).toString());
+			} catch (SQLException e) {
+				fail++;
+				failedStack.add("Failed tuple : "+ (idx+1) + " line in CSV - " + rawCSV.get(idx).toString());
+			}
+		}
+		int success = insertTableQ.size()-fail;
+		System.out.println("Data import completed. (Insertion Success : "+ success +", Insertion Failure : "+fail + ")");
+		for(int idx = 0; idx<failedStack.size(); ++idx) {
+			System.out.println(failedStack.get(idx).toString());
+		}
+		
 	}
 
 }

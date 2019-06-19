@@ -15,15 +15,16 @@ public class ReadCSV {
 	private boolean hasError = true;
 	
 	private String tableName = "";
+	private ArrayList rawCSVData = new ArrayList<String>();
 	private ArrayList colName = new ArrayList<String>();
 	private ArrayList csvColName = new ArrayList<String>();
 	private ArrayList colType = new ArrayList<String>();
 	private ArrayList pkName = new ArrayList<String>();
 	private ArrayList notNull = new ArrayList<String>();
 	private ArrayList<ArrayList<String>> csvData = new ArrayList<ArrayList<String>>();
+	private ArrayList<String> insertDataQ = new ArrayList<String>();
 	private int csvColNum = 0;
 	private String makeTableQ = "";
-	private ArrayList<String> insertDataQ = new ArrayList<String>();
 	
 	private String SCHEMA_NAME="";
 	
@@ -95,6 +96,7 @@ public class ReadCSV {
 				csvColName.add(line.split(",")[i]);
 			}
 			while((line=br.readLine())!=null) {
+				rawCSVData.add(line);
 				ArrayList<String> temp = new ArrayList<String>();
 				for(int i=0; i<csvColNum; i++) {
 					temp.add(line.split(",")[i]);
@@ -148,17 +150,34 @@ public class ReadCSV {
 		parsingCSV();
 		if(csvColNum!=colName.size()) {
 			System.out.println("Data import failure. (The number of columns does not match between the table description and the CSV file.)");
-		}
-		else {
 			return null;
 		}
-		// data insert query 작성
 		
-		
-		
-		
+		String insertSQL = "INSERT INTO "+SCHEMA_NAME+"."+tableName+" values(";
+		for(int idx=0; idx<csvData.size(); ++idx) {
+			String addStr="";
+			for(int col_idx = 0; col_idx<colName.size(); ++col_idx) {
+				String curColName = colName.get(col_idx).toString();
+				if(colType.get(col_idx).toString()=="integer") {
+					addStr += csvData.get(idx).get(csvColName.indexOf(curColName)).toString();
+				}
+				else {
+					addStr = addStr + "'" + csvData.get(idx).get(csvColName.indexOf(curColName)).toString()+ "'" ;
+				}
+				if(col_idx!=colName.size()-1) {
+					addStr+= ", ";
+				}
+			}
+			addStr += ")";
+			String temp = insertSQL + addStr;
+			insertDataQ.add(temp);
+		}	
+	
 		return insertDataQ;
 	}
 	
+	public ArrayList<String> getCSVRaw(){
+		return rawCSVData;
+	}
 	
 }
