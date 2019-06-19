@@ -13,11 +13,12 @@ public class JDBCConnect {
 	private String SCHEMA_NAME = "";
 	private String ID = "";
 	private String PW = "";
+	private Connection conn;
+	private Statement st;
 	
 	private void parsingTXT() {
 		// parsing txt file
 		try {
-
 			File file = new File(path);
 			FileReader fileReader = new FileReader(file);
 			BufferedReader br = new BufferedReader(fileReader);
@@ -48,7 +49,7 @@ public class JDBCConnect {
 		}
 		catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
-			System.out.println("connection.txt ÆÄÀÏ ¾øÀ½");
+			System.out.println("connection.txt ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -56,7 +57,6 @@ public class JDBCConnect {
 
 		// set DB_DRIVER
 		DB_CONNECTION_URL = DB_CONNECTION_URL+IP+"/"+DB_NAME;
-		System.out.println(DB_CONNECTION_URL);
 	}
 	
 	public void connectDB() {
@@ -73,12 +73,28 @@ public class JDBCConnect {
 		connProps.setProperty("user", ID);
 		connProps.setProperty("password", PW);
 		try {
-			Connection conn = DriverManager.getConnection(DB_CONNECTION_URL, connProps);
-			Statement st = conn.createStatement();
+			conn = DriverManager.getConnection(DB_CONNECTION_URL, connProps);
+			st = conn.createStatement();
+			String createSchemaSQL = "CREATE SCHEMA "+SCHEMA_NAME;
+			st.executeUpdate(createSchemaSQL);
+			
 		} catch (SQLException sqlEX) {
 			System.out.println(sqlEX);
 		}
-		System.out.println("connection¿Ï·á");
 	}
+	
+	public String getSchemaName() {
+		return SCHEMA_NAME;
+	}
+	
+	public void executeTableSQL(String str) {
+		try {
+			st.executeUpdate(str);
+			System.out.println("Table is newly created as described in the file");
+		} catch (SQLException e) {
+			System.out.println("Table already exists");
+		} 
+	}
+
 }
 
