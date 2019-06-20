@@ -52,16 +52,16 @@ public class main {
 						con.describeTable();
 					}
 					else if(manipulateMode == 3) {
-						
+						con.SelectData();
 					}
 					else if(manipulateMode == 4) {
-						
+						con.insertData();
 					}
 					else if(manipulateMode == 5) {
-						
+						con.deleteData();
 					}
 					else if(manipulateMode == 6) {
-						con.updateTable1();
+						con.updateTable();
 					}
 					else if(manipulateMode == 7) {
 						con.dropTable();

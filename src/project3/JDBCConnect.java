@@ -3,8 +3,11 @@ package project3;
 import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.Set;
 
 public class JDBCConnect {
 	private static final String path = "./connection.txt";
@@ -201,11 +204,349 @@ public class JDBCConnect {
 
 	}
 	
+	public void SelectData() {
+		String SelectQuery = "";
+		HashMap<String, String> conditionMap_e = new HashMap<String, String>();
+		conditionMap_e.put("1", "=");
+		conditionMap_e.put("2", ">");
+		conditionMap_e.put("3", "<");
+		conditionMap_e.put("4", ">=");
+		conditionMap_e.put("5", "<=");
+		conditionMap_e.put("6", "!=");
+		conditionMap_e.put("7", "LIKE");
+
+		HashMap<String, String> conditionMap_c = new HashMap<String, String>();
+		conditionMap_c.put("1", "AND");
+		conditionMap_c.put("2", "OR");
+		conditionMap_c.put("3", "");
+		
+		int mode = 0;
+		int mode_c = 0;
+		String mode_v = "";
+		String p_col[] = null;
+		String ConditionQuery = "";
+		
+		Scanner scn = new Scanner(System.in);
+		System.out.print("Please specify the table name :");
+		String table_name = scn.nextLine();
+		
+		System.out.print("Please specify the column which you want to retrive (ALL :*): ");
+		String c_retrieve = scn.nextLine();
+		if(!c_retrieve.equals("*")){
+			SelectQuery = "SELECT ";
+			c_retrieve = c_retrieve.replaceAll(" ", "");
+			p_col = c_retrieve.split(",");
+			for( String x : p_col){
+				SelectQuery = SelectQuery + "\""+ x + "\"," ;
+			}
+			SelectQuery=SelectQuery.substring(0, SelectQuery.length()-1);
+			SelectQuery += " FROM "+ "\""+SCHEMA_NAME+"\".\""+table_name+ "\"";
+			
+		}else{
+			SelectQuery = "SELECT * FROM "+ "\""+SCHEMA_NAME+"\".\""+table_name+ "\"";
+		}
+		System.out.print("Please specify the column which you want to make condition (Press enter:skip) :");
+		String c_condition = scn.nextLine();
+
+		
+		if(!c_condition.isEmpty()){
+			while(mode != 3){
+				
+				if(mode!=0){
+					System.out.print("Please specify the column which you want to make condition :");
+					c_condition = scn.nextLine();
+				}
+				
+				
+	               System.out.println("Please specify the condition(1: =, 2: >, 3: <, 4: >=, 5: <=. 6: !=, 7: LIKE);");
+	               mode_c = scn.nextInt();
+	               scn.nextLine();
+	               ConditionQuery = ConditionQuery + "\""+c_condition + "\" " + conditionMap_e.get(String.valueOf(mode_c));      
+	               System.out.println("Please specify the value ("+ConditionQuery+" ?)");
+	               mode_v = scn.nextLine();
+	               
+	               System.out.println("Please specify the condition (1: AND, 2:OR, 3:finish) : ");
+	               mode = scn.nextInt();
+	               scn.nextLine();
+	              
+	        ConditionQuery = ConditionQuery +" " + mode_v + " " +conditionMap_c.get(String.valueOf(mode)) + " ";
+	        }
+			SelectQuery += " WHERE " + ConditionQuery;
+		}
+					
+		System.out.print("Please specify the column name for ordering (Press enter : skip) :");
+		String c_ordering = scn.nextLine();
+		if(!c_ordering.isEmpty()){
+			System.out.print("Please specify the sorting criteria (Press enter:skip) :");
+			String sortingCriteria = scn.nextLine();
+			
+			c_ordering = c_ordering.replace(" ", "");
+			sortingCriteria = sortingCriteria.replace("ASCEND", "ASC");
+			sortingCriteria = sortingCriteria.replace("DESCEND", "DESC");
+			sortingCriteria = sortingCriteria.replace(" ", "");
+			
+			String p_co[] = c_ordering.split(",");
+			String p_sc[] = sortingCriteria.split(",");
+
+			SelectQuery += " ORDER BY ";
+			for(int i=0; i<p_co.length; i++){
+				SelectQuery += "\""+p_co[i] + "\" " + p_sc[i] + ", ";
+			}
+			SelectQuery = SelectQuery.substring(0, SelectQuery.length()-2);
+		}
+
+			
+		//Describe Table
+		HashMap<String, String> columnInfo = new HashMap<String, String>();
+		String DescribeTable1 = "SELECT column_name, data_type FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '"+ table_name+"' AND table_schema='"+SCHEMA_NAME+"'";
+		ResultSet tempRS;
+		ResultSet rs;
+		Set<Map.Entry<String, String>> colEntries;
+		try {
+			tempRS = st.executeQuery(DescribeTable1);
+			while(tempRS.next()){
+				columnInfo.put(tempRS.getString(1), tempRS.getString(2));
+				//System.out.println("columnInfo : " +tempRS.getString(1) + ", " + tempRS.getString(2));
+			}
+			colEntries = columnInfo.entrySet();
+			
+			SelectQuery+=";";
+
+			rs = st.executeQuery(SelectQuery);
+			
+
+			String temp ="";
+		    System.out.println("=================================================");
+		    if(c_retrieve.equals("*")){
+		    	for(String key : columnInfo.keySet()){
+		    		String value = key;
+		    		temp = temp + value + " | ";
+		    	}
+		    }else{
+		    	for(String x : p_col){
+		    		temp = temp + x + " | ";
+		    		//System.out.println("p_col test: "+ columnInfo.get(x));
+		    	}
+		    }temp = temp.substring(0, temp.length()-2);
+		    System.out.println(temp);
+		    System.out.println("=================================================");
+		    
+		    String result = "";
+		    int label = 1;
+			while (rs.next()) {
+
+				int cnt = 1;
+				if(c_retrieve.equals("*")){
+					for(Map.Entry<String, String> colEntry : colEntries){
+						//System.out.println(colEntry.getValue());
+						if(colEntry.getValue().contains("int")){
+							result += rs.getInt(cnt);
+						}else if(colEntry.getValue().contains("date")){
+							result += rs.getDate(cnt);
+						}else if(colEntry.getValue().contains("time")){
+							result += rs.getTime(cnt);
+						}
+						else{
+							result += rs.getString(cnt);
+						}
+						cnt++; result += ", ";
+					}
+					
+					result=result.substring(0, result.length()-2);
+					System.out.println(result);
+					result = "";
+				}else{
+					
+					for(String x : p_col){
+						//System.out.println("p_col : "+x);
+						String value = columnInfo.get(x);
+						if(value.contains("int")){
+							result += rs.getInt(cnt);
+						}else if(value.contains("date")){
+							result += rs.getDate(cnt);
+						}else if(value.contains("time")){
+							result += rs.getTime(cnt);
+						}else{
+							result += rs.getString(cnt);
+						}
+						cnt++; result += ", ";
+						
+					}
+					result=result.substring(0, result.length()-2);
+					System.out.println(result);
+					result = "";
+				}
+				if(label%10 == 0) {
+					System.out.println("Press Enter");
+					Scanner sc = new Scanner(System.in);
+					sc.nextLine();
+				}
+				label++;
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			System.out.println("<error detected>");
+		}
+		
+	}
+	
+	public void insertData() {
+		String insertQuery = "INSERT INTO "+SCHEMA_NAME+".";
+		
+		System.out.print("Please specify the table name : ");
+		Scanner scan = new Scanner(System.in);
+		String tableName = scan.nextLine();
+		
+		String DescribeTable = "SELECT column_name, data_type " +
+                "FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '"+ tableName+"' AND table_schema='"+SCHEMA_NAME+"'";
+		ResultSet rs;
+		ArrayList<String> colNames = new ArrayList<String>();
+		ArrayList<String> dataTypes = new ArrayList<String>();
+		try {
+			rs = st.executeQuery(DescribeTable);
+			while(rs.next()) {
+				colNames.add(rs.getString(1));
+				dataTypes.add(rs.getString(2));
+			}
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		
+		insertQuery += "\""+tableName+"\" (";
+		System.out.print("Please specify all the columns in order of which you want to insert :");
+		String colum_names = scan.nextLine();
+		colum_names = colum_names.replace(" ", "");
+		ArrayList<String> insertCol = new ArrayList<String>();
+		ArrayList<String> insertVal = new ArrayList<String>();
+		
+		for(int idx=0; idx<colum_names.split(",").length; ++idx) {
+			insertCol.add(colum_names.split(",")[idx]);
+		}
+		
+		System.out.print("Please specify values for each column :");
+		String values = scan.nextLine();
+		values = values.replace(" ", "");
+		
+		for(int idx=0; idx<values.split(",").length; ++idx) {
+			insertVal.add(values.split(",")[idx]);
+		}
+
+		for(int idx=0; idx<insertCol.size(); ++idx) {
+			insertQuery += "\"" + insertCol.get(idx).toString() + "\"";
+			if(idx!=insertCol.size()-1) {
+				insertQuery += ", ";
+			}
+		}
+		insertQuery += ") values (";
+		
+		for(int idx=0; idx<insertVal.size(); ++idx) {
+			if(colNames.indexOf(insertCol.get(idx).toString())!= -1) {
+				if(dataTypes.get(colNames.indexOf(insertCol.get(idx).toString())).toString().equals("integer")) {
+					insertQuery += insertVal.get(idx).toString();
+				}
+				else {
+					insertQuery += "'"+insertVal.get(idx).toString()+"'";
+				}
+				if(idx!=insertVal.size()-1) {
+					insertQuery += ", ";
+				}
+			}
+		}
+		insertQuery += ")";
+		
+		try {
+
+			st.executeUpdate(insertQuery);
+			System.out.println("<1 row updated>");
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			System.out.println("<0 row inserted due to error>");
+			return;
+		}
+				
+	}
 	
 	
 	
 	
 	
+	public void deleteData() {
+		String DeleteQuery = "";
+		HashMap<String, String> conditionMap_e1 = new HashMap<String, String>();
+		conditionMap_e1.put("1", "=");
+		conditionMap_e1.put("2", ">");
+		conditionMap_e1.put("3", "<");
+		conditionMap_e1.put("4", ">=");
+		conditionMap_e1.put("5", "<=");
+		conditionMap_e1.put("6", "!=");
+		conditionMap_e1.put("7", "LIKE");
+
+		HashMap<String, String> conditionMap_c1 = new HashMap<String, String>();
+		conditionMap_c1.put("1", "AND");
+		conditionMap_c1.put("2", "OR");
+		conditionMap_c1.put("3", "");
+
+		int mode1 = 0;
+		int mode_c1 = 0;
+		String mode_v1 = "";
+		
+		String ConditionQuery1 = "";
+		
+		Scanner scn11 = new Scanner(System.in);
+		System.out.println("Please specify the table name :");
+		String table_name11 = scn11.nextLine();
+
+		DeleteQuery = "DELETE FROM " + "\"" + SCHEMA_NAME + "\".\"" + table_name11 + "\" ";
+		System.out.println("Please specify the column which you want to make condition (Press enter:skip) :");
+		String c_condition1 = scn11.nextLine();
+
+		
+		if(!c_condition1.isEmpty()){
+			while(mode1 != 3){
+				
+				if(mode1!=0){
+					System.out.println("Please specify the column which you want to make condition :");
+					c_condition1 = scn11.nextLine();
+				}
+				
+				
+				System.out.println("Please specify the condition(1: =, 2: >, 3: <, 4: >=, 5: <=. 6: !=, 7: LIKE): ");
+				mode_c1 = scn11.nextInt();
+				scn11.nextLine();
+				ConditionQuery1 = ConditionQuery1 + "\""+c_condition1 + "\" " + conditionMap_e1.get(String.valueOf(mode_c1));		
+				System.out.println("Please specify the value ("+ConditionQuery1+" ?)");
+				mode_v1 = scn11.nextLine();
+				
+				System.out.println("Please specify the condition (1: AND, 2:OR, 3:finish) : ");
+				mode1 = scn11.nextInt();
+				scn11.nextLine();
+				
+				ConditionQuery1 = ConditionQuery1 +" " + mode_v1 + " " +conditionMap_c1.get(String.valueOf(mode1)) + " ";
+			}
+			DeleteQuery += "WHERE " + ConditionQuery1;
+		}
+			
+		DeleteQuery+=";";
+		System.out.println(DeleteQuery);
+		try {
+			int rows = st.executeUpdate(DeleteQuery);
+			if(rows == 0 || rows == 1 ) {
+				System.out.println("<"+rows+" row updated>");
+			}
+			else {
+				System.out.println("<"+rows+" rows updated>");
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			System.out.println("<error detected>");
+			return;
+		}
+	}
+		
+		
 	
 	
 	
@@ -235,14 +576,11 @@ public class JDBCConnect {
 		ArrayList<String> condition2 = new ArrayList<String>();
 		ArrayList<String> value = new ArrayList<String>();
 		
-		boolean error = false;
 		System.out.print("Please specify the column which you want to make condition (Press enter : skip) : ");
 		String colName = scan.nextLine();
 		if(!colName.equals("")){
 			column.add(colName);
-			if(!colNames.contains(colName)) {
-				error = true;
-			}
+
 			System.out.print("Please specify the condition (1: =, 2: >, 3: <, 4: >= 5: <=, 6: !=, 7: LIKE) : ");
 			String select1 = scan.nextLine();
 			if(select1.equals("1")) {
@@ -282,9 +620,7 @@ public class JDBCConnect {
 				System.out.print("Please specify the column which you want to make condition : ");
 				colName = scan.nextLine();
 				column.add(colName);
-				if(!colNames.contains(colName)) {
-					error = true;
-				}
+
 				System.out.print("Please specify the condition (1: =, 2: >, 3: <, 4: >= 5: <=, 6: !=, 7: LIKE) : ");
 				select1 = scan.nextLine();
 				if(select1.equals("1")) {
@@ -336,10 +672,7 @@ public class JDBCConnect {
 			
 			for(int idx=0; idx<updateColumn.split(",").length; ++idx) {
 				String temp = updateColumn.split(",")[idx];
-				System.out.println(temp);
-				if(!colNames.contains(temp)) {
-					error = true;
-				}
+
 				updateQuery+= "\""+updateColumn.split(",")[idx]+"\""+"=";
 				// integer가 아니라면 
 				if(dataTypes.get(colNames.indexOf(temp)).toString().equals("integer")) {
@@ -362,10 +695,14 @@ public class JDBCConnect {
 			makeStr+=value.get(value.size()-1).toString();
 
 			updateQuery += " WHERE "+makeStr;
-	
-			
+
+		}
+		else {
+			System.out.println("<0 row updated>");
+			return ;
 		}
 		try {
+
 			int rows = st.executeUpdate(updateQuery);
 			if(rows == 0 || rows == 1 ) {
 				System.out.println("<"+rows+" row updated>");
@@ -375,32 +712,11 @@ public class JDBCConnect {
 			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("<error detected>");
+			return;
 		}
 		
-		
-		
-		
-		
-		
-		
-		
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 
 	
