@@ -139,7 +139,6 @@ public class ReadCSV {
 		}
 		str += "))";
 		makeTableQ = str;
-		scan.close();
 		return makeTableQ;
 	}
 	
@@ -173,7 +172,6 @@ public class ReadCSV {
 			String temp = insertSQL + addStr;
 			insertDataQ.add(temp);
 		}	
-		scan.close();
 		return insertDataQ;
 	}
 	

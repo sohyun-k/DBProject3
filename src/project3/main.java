@@ -31,12 +31,48 @@ public class main {
 					con.executeInsertTableDB(tableDataQ, rCSV.getCSVRaw());
 				}
 			}
-			if(mode == 2) {
+			else if(mode == 2) {
 				System.out.println("[Export to CSV]");
 				ExportCSV eCSV = new ExportCSV(schemaName);
 				String query = eCSV.getQuery();
 				ArrayList<ArrayList<String>> rs = con.getTableResultSet(query);
 				eCSV.makeCSVFile(rs);
+			}
+			else if(mode == 3) {
+				System.out.println("[Manipulate Data]");
+				boolean manipulateOut = false;
+				ManipulateData mData = new ManipulateData();
+				int manipulateMode = 0;
+				while(!manipulateOut) {
+					manipulateMode = mData.executeMData();
+					if(manipulateMode == 1) {
+						con.showTables();
+					}
+					else if(manipulateMode == 2) {
+						con.describeTable();
+					}
+					else if(manipulateMode == 3) {
+						
+					}
+					else if(manipulateMode == 4) {
+						
+					}
+					else if(manipulateMode == 5) {
+						
+					}
+					else if(manipulateMode == 6) {
+						con.updateTable1();
+					}
+					else if(manipulateMode == 7) {
+						con.dropTable();
+					}
+					else if(manipulateMode == 8) {
+						manipulateOut = true;
+					}
+				}
+			}
+			else if(mode == 4) {
+				
 			}
 		}
 	}
